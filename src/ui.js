@@ -12,6 +12,7 @@ export function createUI(app) {
   const todoDialogHeading = document.querySelector('#todo-dialog-heading');
   const todoProjectName = document.querySelector('#todo-project-name');
   const todoError = document.querySelector('#todo-error');
+  const actionStatus = document.querySelector('#action-status');
   let activeProjectId = app.defaultProjectId;
   let editingTodoId = null;
 
@@ -19,6 +20,7 @@ export function createUI(app) {
     editingTodoId = todo ? todo.id : null;
     todoForm.reset();
     todoError.textContent = '';
+    todoForm.elements.namedItem('title').removeAttribute('aria-invalid');
     todoDialogHeading.textContent = todo ? 'View or edit todo' : 'Add todo';
     todoProjectName.textContent = `Project: ${app.getProject(activeProjectId).name}`;
     if (todo) {
@@ -57,6 +59,9 @@ export function createUI(app) {
 
     const items = todos.map((todo) => {
       const item = document.createElement('li');
+      item.className = 'todo-card';
+      item.dataset.priority = todo.priority;
+      item.dataset.completed = String(todo.completed);
       const title = document.createElement('h3');
       title.textContent = todo.title;
       const dueDate = document.createElement(todo.dueDate ? 'time' : 'span');
@@ -74,10 +79,11 @@ export function createUI(app) {
       const completion = document.createElement('input');
       completion.type = 'checkbox';
       completion.checked = todo.completed;
-      completion.setAttribute('aria-label', `Mark ${todo.title} as complete`);
+      completion.setAttribute('aria-label', `Complete ${todo.title}`);
       completion.addEventListener('change', () => {
         app.toggleTodoComplete(activeProjectId, todo.id);
         status.textContent = todo.completed ? 'Complete' : 'Incomplete';
+        item.dataset.completed = String(todo.completed);
       });
       completionLabel.append(completion, ' Complete');
 
@@ -90,14 +96,19 @@ export function createUI(app) {
       const deleteButton = document.createElement('button');
       deleteButton.type = 'button';
       deleteButton.textContent = 'Delete';
+      deleteButton.className = 'delete-button';
       deleteButton.setAttribute('aria-label', `Delete ${todo.title}`);
       deleteButton.addEventListener('click', () => {
         app.deleteTodo(activeProjectId, todo.id);
+        actionStatus.textContent = `Deleted ${todo.title}.`;
         renderTodos();
         projectHeading.focus();
       });
 
-      item.append(title, details, completionLabel, editButton, deleteButton);
+      const actions = document.createElement('div');
+      actions.className = 'todo-actions';
+      actions.append(completionLabel, editButton, deleteButton);
+      item.append(title, details, actions);
       return item;
     });
     todoList.replaceChildren(...items);
@@ -115,10 +126,12 @@ export function createUI(app) {
       activeProjectId = project.id;
       projectForm.reset();
       projectError.textContent = '';
+      projectName.removeAttribute('aria-invalid');
       render();
       projectHeading.focus();
     } catch (error) {
       projectError.textContent = error.message;
+      projectName.setAttribute('aria-invalid', 'true');
       projectName.focus();
     }
   });
@@ -137,9 +150,11 @@ export function createUI(app) {
       }
     } catch (error) {
       todoError.textContent = error.message;
+      todoForm.elements.namedItem('title').setAttribute('aria-invalid', 'true');
       todoForm.elements.namedItem('title').focus();
       return;
     }
+    actionStatus.textContent = editingTodoId === null ? 'Todo added.' : 'Todo updated.';
     todoDialog.close();
     renderTodos();
     projectHeading.focus();

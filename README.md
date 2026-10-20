@@ -4,7 +4,7 @@ A learning project for [The Odin Project Todo List assignment](https://www.theod
 
 ## Current status
 
-Phases 1–5 are implemented: build tooling, application logic, project navigation, todo controls, and localStorage persistence with object restoration. A first visit starts with an empty Inbox; subsequent visits restore saved projects and todos. Responsive styling and deployment are not implemented yet.
+The app supports projects, todo creation and editing, completion, deletion, and localStorage persistence with object restoration. It includes responsive styling, keyboard controls, and a GitHub Pages deployment workflow. A first visit starts with an empty Inbox; subsequent visits restore saved projects and todos. The workflow is prepared locally; a live deployment has not been verified.
 
 ## Getting started
 
@@ -30,7 +30,9 @@ Both commands generate `dist/`. The development build includes source maps; the 
 - `package-lock.json`: exact dependency versions for reproducible installs with `npm ci`.
 - `webpack.config.js`: entry point, output directory, HTML generation, source maps, and local development server.
 - `src/index.js`: loads saved state, wires application changes to storage and storage feedback to the page, then renders the UI.
-- `src/template.html`: HTML template containing project navigation, the project form, and the todo list. The HTML plugin injects the bundle script.
+- `src/template.html`: semantic page, labeled forms, and native todo dialog. The HTML plugin injects the bundle script and resolves the stylesheet asset.
+- `src/styles.css`: responsive layout, control styling, focus indicators, priority accents, and completion styling.
+- `.github/workflows/deploy.yml`: installs dependencies, runs tests, builds, and deploys `dist/` to GitHub Pages.
 - `.gitignore`: excludes installed dependencies (`node_modules/`) and generated output (`dist/`).
 
 ## Dependencies
@@ -44,7 +46,7 @@ All dependencies are development tools:
 - `webpack-dev-server`: serves the development build and updates the browser during development.
 - `html-webpack-plugin`: generates HTML from the template and inserts the bundle script.
 
-There are no runtime dependencies. CSS tooling will be added when styles are introduced.
+There are no runtime dependencies. Webpack emits the plain CSS as an asset referenced by the HTML template; no CSS loader is needed. Production asset URLs are relative so the build works under a project subpath. Development uses `/` as its public path so Webpack serves the root page correctly. Restart `npm start` after changing the Webpack configuration.
 
 ## Using the app
 
@@ -69,7 +71,7 @@ Each successful project or todo change is saved to localStorage. Reloading resto
 9. Use Complete to mark and unmark the todo. Confirm the checkbox and completion text agree and the state survives project switching and editing.
 10. Create a todo in Study. Confirm each project shows only its own todos. Delete one of several todos and confirm the others remain; delete the last todo to check the empty state.
 11. Enter `<Read the lesson>` as a title and HTML-like text in the description. Confirm it appears literally rather than becoming HTML.
-12. Use Tab, Enter, and Space to operate the app. Confirm the dialog receives focus, keeps keyboard focus inside while open, and returns focus when canceled. Check the browser console for errors.
+12. Use Tab, Enter, and Space to operate the app. Confirm the dialog receives focus, prevents keyboard access to background page controls while open, and returns focus when canceled. Check the browser console for errors.
 13. Reload and confirm projects, todo details, and completion state are restored. Confirm a deleted todo stays deleted. Edit, toggle, and delete a restored todo to verify its methods work.
 14. Run both build commands and confirm each generates `dist/index.html` and `dist/main.js`.
 
@@ -125,3 +127,37 @@ app.deleteTodo(project.id, todo.id);
 console.log(project.getTodos()); // []
 console.log(app.getProjects()); // Inbox and Study.
 ```
+
+## Responsive layout and accessibility
+
+The desktop layout places project navigation beside the todo list. At 700px and below, navigation stacks above the list and controls wrap. Long names and titles wrap instead of expanding the page. The dialog scrolls within the viewport.
+
+The page includes a skip link, semantic landmarks and headings, labeled native controls, visible keyboard focus, an active-project marker, and live feedback for errors and saved/deleted todo actions. Priority and completion are expressed in text as well as styling. Native modal behavior supports Escape and restores focus on cancellation; saving and deleting move focus to the current project heading.
+
+Manual final review should include 320px, 390px, tablet, and desktop widths; 200% zoom; long project names and todo titles; keyboard-only use; and a screen reader. Check both the empty and populated states and the dialog. Browser testing so far covers Chromium, not Firefox, Safari, or assistive technology.
+
+## Validation performed
+
+- Nine Node tests pass across application logic and persistence.
+- Development and production builds pass. The Webpack development root route, JavaScript initialization, stylesheet, and todo dialog were also verified in Chromium.
+- The production build was served locally under `/odin-todo-list/` and checked with temporary Playwright/Chromium tooling outside this repository.
+- Browser checks passed for project navigation, todo creation/editing/completion/deletion, validation, literal HTML-like input, reload restoration, corrupted-data recovery, dialog autofocus, cancellation focus return, and background-control exclusion while tabbing in the modal.
+- At 320, 390, 768, and 1280px widths, the populated page and dialog had no horizontal overflow. Desktop and mobile screenshots were visually reviewed.
+- Git whitespace checks pass.
+
+These checks do not certify complete accessibility or cross-browser compatibility. Run the manual review before publishing.
+
+## Deployment
+
+The repository includes a [GitHub Pages Actions workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages). It runs on pushes to `main` or manual dispatch, tests and builds with Node.js 24, uploads only `dist/`, and deploys through the `github-pages` environment.
+
+To publish after reviewing the changes:
+
+1. In the GitHub repository, open Settings → Pages and select GitHub Actions as the build source.
+2. Commit and push the reviewed changes to `main`.
+3. Inspect the Deploy to GitHub Pages workflow in Actions. Resolve any repository environment approval if GitHub requests it.
+4. Open the URL reported by the deployment job. Verify project creation, todo operations, reload persistence, and mobile layout on the published site.
+
+The expected default address is `https://jan-christopher-buen.github.io/odin-todo-list/`; it is not presented as a verified live demo. Repository Pages settings have not been changed and no push or deployment has been performed during local setup. Localhost and the published site have separate storage.
+
+For another static host, run `npm ci` and `npm run build`, then publish the contents of `dist/` over HTTPS.
