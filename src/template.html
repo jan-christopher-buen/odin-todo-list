@@ -6,9 +6,23 @@
     <title>Odin Todo List</title>
   </head>
   <body>
-    <main>
+    <header>
       <h1>Odin Todo List</h1>
-      <p id="setup-status">Loading the development setup…</p>
+    </header>
+    <nav aria-labelledby="projects-heading">
+      <h2 id="projects-heading">Projects</h2>
+      <ul id="project-list"></ul>
+      <form id="project-form">
+        <label for="project-name">New project name</label>
+        <input id="project-name" name="projectName" required aria-describedby="project-error" />
+        <button type="submit">Add project</button>
+        <p id="project-error" role="alert"></p>
+      </form>
+    </nav>
+    <main>
+      <h2 id="project-heading" tabindex="-1">Inbox</h2>
+      <p id="empty-state">No todos in this project.</p>
+      <ul id="todo-list" aria-labelledby="project-heading"></ul>
     </main>
   </body>
 </html>

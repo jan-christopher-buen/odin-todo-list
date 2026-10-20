@@ -1,3 +1,7 @@
-const setupStatus = document.querySelector('#setup-status');
+import { createApp } from './app.js';
+import { createUI } from './ui.js';
 
-setupStatus.textContent = 'The development setup is ready.';
+const app = createApp();
+const ui = createUI(app);
+
+ui.render();
