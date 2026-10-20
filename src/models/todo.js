@@ -23,15 +23,21 @@ function validateDetails({ title, description, dueDate, priority }) {
   }
 }
 
-export function createTodo({ title, description = '', dueDate = '', priority = 'medium' }) {
+export function createTodo({
+  id = crypto.randomUUID(), title, description = '', dueDate = '',
+  priority = 'medium', completed = false,
+}) {
+  if (typeof id !== 'string' || id.trim() === '' || typeof completed !== 'boolean') {
+    throw new Error('Invalid todo identity or completion state.');
+  }
   const details = { title, description, dueDate, priority };
   validateDetails(details);
 
   return {
-    id: crypto.randomUUID(),
+    id,
     ...details,
     title: title.trim(),
-    completed: false,
+    completed,
     update(changes) {
       const next = {
         title: changes.title === undefined ? this.title : changes.title,

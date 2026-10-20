@@ -1,4 +1,7 @@
-export function createProject(name) {
+export function createProject(name, id = crypto.randomUUID()) {
+  if (typeof id !== 'string' || id.trim() === '') {
+    throw new Error('A project ID is required.');
+  }
   if (typeof name !== 'string' || name.trim() === '') {
     throw new Error('A project name is required.');
   }
@@ -6,7 +9,7 @@ export function createProject(name) {
   const todos = [];
 
   return {
-    id: crypto.randomUUID(),
+    id,
     name: name.trim(),
     getTodos() {
       return [...todos];

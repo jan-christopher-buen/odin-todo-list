@@ -4,7 +4,7 @@ A learning project for [The Odin Project Todo List assignment](https://www.theod
 
 ## Current status
 
-Phases 1–4 are implemented: build tooling, application logic, project creation and navigation, and todo creation, viewing/editing, completion, and deletion. The app starts with an empty Inbox. Persistence and responsive styling are not implemented yet.
+Phases 1–5 are implemented: build tooling, application logic, project navigation, todo controls, and localStorage persistence with object restoration. A first visit starts with an empty Inbox; subsequent visits restore saved projects and todos. Responsive styling and deployment are not implemented yet.
 
 ## Getting started
 
@@ -29,7 +29,7 @@ Both commands generate `dist/`. The development build includes source maps; the 
 - `package.json`: project metadata, scripts, and development dependencies. The package is private to prevent accidental npm publishing.
 - `package-lock.json`: exact dependency versions for reproducible installs with `npm ci`.
 - `webpack.config.js`: entry point, output directory, HTML generation, source maps, and local development server.
-- `src/index.js`: creates the application and UI, then renders the initial view.
+- `src/index.js`: loads saved state, wires application changes to storage and storage feedback to the page, then renders the UI.
 - `src/template.html`: HTML template containing project navigation, the project form, and the todo list. The HTML plugin injects the bundle script.
 - `.gitignore`: excludes installed dependencies (`node_modules/`) and generated output (`dist/`).
 
@@ -54,7 +54,7 @@ There are no runtime dependencies. CSS tooling will be added when styles are int
 - Use the Complete checkbox to toggle completion.
 - Click Delete to remove a todo immediately.
 
-All data is currently in memory and is lost on reload.
+Each successful project or todo change is saved to localStorage. Reloading restores the data; navigation returns to Inbox.
 
 ## Manual browser checks
 
@@ -70,7 +70,7 @@ All data is currently in memory and is lost on reload.
 10. Create a todo in Study. Confirm each project shows only its own todos. Delete one of several todos and confirm the others remain; delete the last todo to check the empty state.
 11. Enter `<Read the lesson>` as a title and HTML-like text in the description. Confirm it appears literally rather than becoming HTML.
 12. Use Tab, Enter, and Space to operate the app. Confirm the dialog receives focus, keeps keyboard focus inside while open, and returns focus when canceled. Check the browser console for errors.
-13. Reload and confirm only an empty Inbox remains; persistence is not implemented yet.
+13. Reload and confirm projects, todo details, and completion state are restored. Confirm a deleted todo stays deleted. Edit, toggle, and delete a restored todo to verify its methods work.
 14. Run both build commands and confirm each generates `dist/index.html` and `dist/main.js`.
 
 ## Application logic
@@ -84,7 +84,24 @@ The logic runs independently of the DOM and storage. `src/app.js` exports `creat
 
 Titles and project names are trimmed and must not be blank. Descriptions must be strings. Due dates are either empty or valid calendar dates in `YYYY-MM-DD` format. Priority is `low`, `medium` (the default), or `high`. Invalid operations throw errors. Updates validate all details before applying changes. Collection getters return array copies; returned objects are live references and should be changed through application operations.
 
-All state is currently in memory. Reloading or creating another application instance starts fresh.
+`createApp()` accepts optional `initialState` and `onChange` parameters. The storage module provides restored objects as the initial state. After each successful data operation, the application calls `onChange` with an independent plain-data snapshot from `getState()`. The browser entry point wires this callback to storage; headless instances without this wiring remain in memory only.
+
+## Persistence
+
+`src/storage.js` owns localStorage access, JSON parsing, saved-data validation, and restoration through the existing factories. It uses the key `odin-todo-list` and a versioned snapshot containing the default project ID, projects, and all todo fields. IDs and completion state are preserved. Methods are recreated by factories rather than stored in JSON.
+
+Missing data starts an empty Inbox. Malformed JSON, unsupported versions, invalid fields, duplicate IDs, or a missing default project produce a visible message and an empty Inbox. Loading does not overwrite invalid saved data; the next successful data change attempts to replace it. Storage access and write failures show feedback while allowing work to continue in memory. A later successful save clears the feedback.
+
+Data belongs to the current browser and origin; different ports, browsers, and devices have separate storage. Clearing site data removes it. Simultaneous tabs are not synchronized, and the last successful save replaces the stored snapshot.
+
+### Manual persistence checks
+
+1. Create projects and todos, edit their fields, and mark some complete. In DevTools → Application → Local Storage, inspect `odin-todo-list` after each change.
+2. Reload and verify all details, project membership, and completion state. Edit, toggle, and delete restored todos, then reload again.
+3. Remove only the `odin-todo-list` key and reload. Confirm a fresh Inbox appears without an error.
+4. After backing up any data you want to keep, set that key to `invalid JSON` and reload. Confirm an empty Inbox and a load-error message appear. Verify the saved value stays unchanged until you make a data change.
+5. Create a todo after that error. Confirm the message clears and the new valid snapshot survives reload.
+6. If browser settings allow blocking site storage, block it and reload. Confirm the page remains usable and shows storage feedback; changes cannot survive reload until storage is available again.
 
 ## Logic checks
 
@@ -92,7 +109,7 @@ All state is currently in memory. Reloading or creating another application inst
 npm test
 ```
 
-The tests cover default project behavior, project isolation, todo updates, completion, deletion, validation, missing IDs, and collection array copies. No additional test dependencies are required.
+The tests cover application operations, validation, independent snapshots, persistence after every data change, restored methods, invalid saved data, unavailable storage, and failed writes. Storage tests use an in-memory substitute, not browser localStorage. No additional test dependencies are required.
 
 To check the logic manually without a browser, run `node --input-type=module` from the repository root and enter:
 
