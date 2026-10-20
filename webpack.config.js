@@ -1,11 +1,11 @@
-const path = require('node:path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+import { fileURLToPath } from 'node:url';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
-module.exports = (_env, argv) => ({
+export default (_env, argv) => ({
   entry: './src/index.js',
   output: {
     filename: 'main.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: fileURLToPath(new URL('./dist', import.meta.url)),
     clean: true,
   },
   devtool: argv.mode === 'development' ? 'eval-source-map' : false,

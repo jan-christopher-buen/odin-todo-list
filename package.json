@@ -2,8 +2,10 @@
   "name": "odin-todo-list",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "The Odin Project Todo List learning project.",
   "scripts": {
+    "test": "node --test",
     "start": "webpack serve --mode development",
     "build:dev": "webpack --mode development",
     "build": "webpack --mode production"
