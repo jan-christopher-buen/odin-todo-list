@@ -6,7 +6,28 @@ export function createUI(app) {
   const projectHeading = document.querySelector('#project-heading');
   const todoList = document.querySelector('#todo-list');
   const emptyState = document.querySelector('#empty-state');
+  const addTodoButton = document.querySelector('#add-todo');
+  const todoDialog = document.querySelector('#todo-dialog');
+  const todoForm = document.querySelector('#todo-form');
+  const todoDialogHeading = document.querySelector('#todo-dialog-heading');
+  const todoProjectName = document.querySelector('#todo-project-name');
+  const todoError = document.querySelector('#todo-error');
   let activeProjectId = app.defaultProjectId;
+  let editingTodoId = null;
+
+  function openTodoDialog(todo = null) {
+    editingTodoId = todo ? todo.id : null;
+    todoForm.reset();
+    todoError.textContent = '';
+    todoDialogHeading.textContent = todo ? 'View or edit todo' : 'Add todo';
+    todoProjectName.textContent = `Project: ${app.getProject(activeProjectId).name}`;
+    if (todo) {
+      for (const name of ['title', 'description', 'dueDate', 'priority']) {
+        todoForm.elements.namedItem(name).value = todo[name];
+      }
+    }
+    todoDialog.showModal();
+  }
 
   function renderProjects() {
     const buttons = app.getProjects().map((project) => {
@@ -45,8 +66,38 @@ export function createUI(app) {
       dueDate.textContent = todo.dueDate || 'No due date';
       const details = document.createElement('p');
       const priority = `${todo.priority[0].toUpperCase()}${todo.priority.slice(1)}`;
-      details.append('Due: ', dueDate, ` · Priority: ${priority} · ${todo.completed ? 'Complete' : 'Incomplete'}`);
-      item.append(title, details);
+      const status = document.createElement('span');
+      status.textContent = todo.completed ? 'Complete' : 'Incomplete';
+      details.append('Due: ', dueDate, ` · Priority: ${priority} · `, status);
+
+      const completionLabel = document.createElement('label');
+      const completion = document.createElement('input');
+      completion.type = 'checkbox';
+      completion.checked = todo.completed;
+      completion.setAttribute('aria-label', `Mark ${todo.title} as complete`);
+      completion.addEventListener('change', () => {
+        app.toggleTodoComplete(activeProjectId, todo.id);
+        status.textContent = todo.completed ? 'Complete' : 'Incomplete';
+      });
+      completionLabel.append(completion, ' Complete');
+
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.textContent = 'View / edit';
+      editButton.setAttribute('aria-label', `View or edit ${todo.title}`);
+      editButton.addEventListener('click', () => openTodoDialog(todo));
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.textContent = 'Delete';
+      deleteButton.setAttribute('aria-label', `Delete ${todo.title}`);
+      deleteButton.addEventListener('click', () => {
+        app.deleteTodo(activeProjectId, todo.id);
+        renderTodos();
+        projectHeading.focus();
+      });
+
+      item.append(title, details, completionLabel, editButton, deleteButton);
       return item;
     });
     todoList.replaceChildren(...items);
@@ -70,6 +121,28 @@ export function createUI(app) {
       projectError.textContent = error.message;
       projectName.focus();
     }
+  });
+
+  addTodoButton.addEventListener('click', () => openTodoDialog());
+  document.querySelector('#cancel-todo').addEventListener('click', () => todoDialog.close());
+
+  todoForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const details = Object.fromEntries(new FormData(todoForm));
+    try {
+      if (editingTodoId === null) {
+        app.addTodo(details, activeProjectId);
+      } else {
+        app.updateTodo(activeProjectId, editingTodoId, details);
+      }
+    } catch (error) {
+      todoError.textContent = error.message;
+      todoForm.elements.namedItem('title').focus();
+      return;
+    }
+    todoDialog.close();
+    renderTodos();
+    projectHeading.focus();
   });
 
   return { render };

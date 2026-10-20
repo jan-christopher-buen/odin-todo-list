@@ -21,8 +21,38 @@
     </nav>
     <main>
       <h2 id="project-heading" tabindex="-1">Inbox</h2>
+      <button id="add-todo" type="button">Add todo</button>
       <p id="empty-state">No todos in this project.</p>
       <ul id="todo-list" aria-labelledby="project-heading"></ul>
     </main>
+    <dialog id="todo-dialog" aria-labelledby="todo-dialog-heading">
+      <h2 id="todo-dialog-heading">Add todo</h2>
+      <p id="todo-project-name"></p>
+      <form id="todo-form">
+        <p>
+          <label for="todo-title">Title (required)</label>
+          <input id="todo-title" name="title" required autofocus aria-describedby="todo-error" />
+        </p>
+        <p>
+          <label for="todo-description">Description</label>
+          <textarea id="todo-description" name="description" rows="4"></textarea>
+        </p>
+        <p>
+          <label for="todo-due-date">Due date</label>
+          <input id="todo-due-date" name="dueDate" type="date" />
+        </p>
+        <p>
+          <label for="todo-priority">Priority</label>
+          <select id="todo-priority" name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </p>
+        <p id="todo-error" role="alert"></p>
+        <button type="submit">Save todo</button>
+        <button id="cancel-todo" type="button">Cancel</button>
+      </form>
+    </dialog>
   </body>
 </html>
