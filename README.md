@@ -2,9 +2,9 @@
 
 A learning project for [The Odin Project Todo List assignment](https://www.theodinproject.com/lessons/node-path-javascript-todo-list).
 
-## Current status
+## Features
 
-The app supports projects, todo creation and editing, completion, deletion, and localStorage persistence with object restoration. It includes responsive styling, keyboard controls, and a GitHub Pages deployment workflow. A first visit starts with an empty Inbox; subsequent visits restore saved projects and todos. The workflow is prepared locally; a live deployment has not been verified.
+The app supports projects, todo creation and editing, completion, deletion, and localStorage persistence with object restoration. It includes responsive styling, keyboard controls, and a GitHub Pages deployment workflow. A first visit starts with an empty Inbox; subsequent visits restore saved projects and todos.
 
 ## Getting started
 
@@ -58,23 +58,6 @@ There are no runtime dependencies. Webpack emits the plain CSS as an asset refer
 
 Each successful project or todo change is saved to localStorage. Reloading restores the data; navigation returns to Inbox.
 
-## Manual browser checks
-
-1. Run `npm start` and open http://localhost:8080. Confirm the empty Inbox appears.
-2. Add a Study project. Switch between Study and Inbox and confirm the active project and main heading match.
-3. Try empty and whitespace-only project names. Confirm no project is created and validation feedback appears.
-4. In Inbox, create a todo with a title, multiline description, due date, and High priority. Confirm its summary shows the correct title, date, priority, and incomplete status.
-5. Open View / edit. Confirm all saved fields are present. Change all fields, save, and reopen to verify the changes.
-6. Make another edit, then Cancel. Reopen and confirm the saved values remain. Repeat with Escape.
-7. Try an empty and whitespace-only todo title. Confirm the dialog stays open, no data is changed, and validation feedback appears.
-8. Clear the description and due date, choose Low priority, and save. Confirm the summary shows No due date and Low priority.
-9. Use Complete to mark and unmark the todo. Confirm the checkbox and completion text agree and the state survives project switching and editing.
-10. Create a todo in Study. Confirm each project shows only its own todos. Delete one of several todos and confirm the others remain; delete the last todo to check the empty state.
-11. Enter `<Read the lesson>` as a title and HTML-like text in the description. Confirm it appears literally rather than becoming HTML.
-12. Use Tab, Enter, and Space to operate the app. Confirm the dialog receives focus, prevents keyboard access to background page controls while open, and returns focus when canceled. Check the browser console for errors.
-13. Reload and confirm projects, todo details, and completion state are restored. Confirm a deleted todo stays deleted. Edit, toggle, and delete a restored todo to verify its methods work.
-14. Run both build commands and confirm each generates `dist/index.html` and `dist/main.js`.
-
 ## Application logic
 
 The logic runs independently of the DOM and storage. `src/app.js` exports `createApp()`, which creates an empty default project named Inbox. Each application instance has its own state.
@@ -96,16 +79,7 @@ Missing data starts an empty Inbox. Malformed JSON, unsupported versions, invali
 
 Data belongs to the current browser and origin; different ports, browsers, and devices have separate storage. Clearing site data removes it. Simultaneous tabs are not synchronized, and the last successful save replaces the stored snapshot.
 
-### Manual persistence checks
-
-1. Create projects and todos, edit their fields, and mark some complete. In DevTools → Application → Local Storage, inspect `odin-todo-list` after each change.
-2. Reload and verify all details, project membership, and completion state. Edit, toggle, and delete restored todos, then reload again.
-3. Remove only the `odin-todo-list` key and reload. Confirm a fresh Inbox appears without an error.
-4. After backing up any data you want to keep, set that key to `invalid JSON` and reload. Confirm an empty Inbox and a load-error message appear. Verify the saved value stays unchanged until you make a data change.
-5. Create a todo after that error. Confirm the message clears and the new valid snapshot survives reload.
-6. If browser settings allow blocking site storage, block it and reload. Confirm the page remains usable and shows storage feedback; changes cannot survive reload until storage is available again.
-
-## Logic checks
+## Testing
 
 ```sh
 npm test
@@ -134,30 +108,24 @@ The desktop layout places project navigation beside the todo list. At 700px and 
 
 The page includes a skip link, semantic landmarks and headings, labeled native controls, visible keyboard focus, an active-project marker, and live feedback for errors and saved/deleted todo actions. Priority and completion are expressed in text as well as styling. Native modal behavior supports Escape and restores focus on cancellation; saving and deleting move focus to the current project heading.
 
-Manual final review should include 320px, 390px, tablet, and desktop widths; 200% zoom; long project names and todo titles; keyboard-only use; and a screen reader. Check both the empty and populated states and the dialog. Browser testing so far covers Chromium, not Firefox, Safari, or assistive technology.
+## Browser testing scope
 
-## Validation performed
-
-- Nine Node tests pass across application logic and persistence.
-- Development and production builds pass. The Webpack development root route, JavaScript initialization, stylesheet, and todo dialog were also verified in Chromium.
-- The production build was served locally under `/odin-todo-list/` and checked with temporary Playwright/Chromium tooling outside this repository.
-- Browser checks passed for project navigation, todo creation/editing/completion/deletion, validation, literal HTML-like input, reload restoration, corrupted-data recovery, dialog autofocus, cancellation focus return, and background-control exclusion while tabbing in the modal.
-- At 320, 390, 768, and 1280px widths, the populated page and dialog had no horizontal overflow. Desktop and mobile screenshots were visually reviewed.
-- Git whitespace checks pass.
-
-These checks do not certify complete accessibility or cross-browser compatibility. Run the manual review before publishing.
+Browser review has covered todo operations, persistence and recovery, dialog
+focus behavior, and layouts at 320, 390, 768, and 1280 pixels in Chromium.
+Cross-browser and assistive-technology coverage is limited. For UI changes,
+also check keyboard navigation, screen-reader use, 200% zoom, and long content.
 
 ## Deployment
 
 The repository includes a [GitHub Pages Actions workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages). It runs on pushes to `main` or manual dispatch, tests and builds with Node.js 24, uploads only `dist/`, and deploys through the `github-pages` environment.
 
-To publish after reviewing the changes:
+To configure publication:
 
 1. In the GitHub repository, open Settings → Pages and select GitHub Actions as the build source.
 2. Commit and push the reviewed changes to `main`.
 3. Inspect the Deploy to GitHub Pages workflow in Actions. Resolve any repository environment approval if GitHub requests it.
 4. Open the URL reported by the deployment job. Verify project creation, todo operations, reload persistence, and mobile layout on the published site.
 
-The expected default address is `https://jan-christopher-buen.github.io/odin-todo-list/`; it is not presented as a verified live demo. Repository Pages settings have not been changed and no push or deployment has been performed during local setup. Localhost and the published site have separate storage.
+Localhost and the published site have separate browser storage.
 
 For another static host, run `npm ci` and `npm run build`, then publish the contents of `dist/` over HTTPS.
